@@ -51,7 +51,20 @@ module.exports = {
             }
 
             if (params.hasOwnProperty('message')) {
-                sails.controllers.bot.parseMessage(req, res);
+                // Find or create the user
+                Users.findOrCreate({
+                    telegramId: params.message.from.id + '',
+                    isTelegramBot: params.message.from.is_bot,
+                    firstName: params.message.from.first_name
+                }).exec(function(error, user) {
+
+                    if (error) {
+                        sails.log.error(error);
+                        return res.serverError('Database error. Unable to fulfill your request.');
+                    }
+                    
+                    sails.controllers.bot.parseMessage(req, res, user);
+                });
             } else {
                 return res.end('Hmm.. I\'m not sure what to do.');
             }
@@ -65,11 +78,22 @@ module.exports = {
      * 
      * @param {object} req The request object from telegramWebhook
      * @param {object} res The response object from telegramWebhook
+     * @param {object} user The user object from the database
      * @author Nagarjun Palavalli <me@nagarjun.co>
      */
-    parseMessage: function(req, res) {
+    parseMessage: function(req, res, user) {
 
         var message = req.body.message;
+
+        // Check if the user is simply setting their message frequency
+        var messageFrequencies = ['Once an hour', 'Every 4 hours', 'Every 6 hours', 'Every 12 hours', 'Once a day'];
+        if (messageFrequencies.indexOf(message.text) > -1) {
+            // @TODO Save the message frequency to the user's document
+            sails.controllers.telegram.sendMessage(req, res, {
+                chat_id: message.chat.id,
+                text: 'Ok, I\'ll send you an inspiring phrase ' + message.text.toLowerCase() + '.'
+            });
+        }
 
         // Perform an action based on the message text
         switch (message.text) {
@@ -81,11 +105,62 @@ module.exports = {
                 break;
 
             default:
-                sails.controllers.telegram.sendMessage(req, res, {
-                    chat_id: message.chat.id,
-                    text: 'I\'m not ready to save new messages yet. Please check back later.'
-                });
+                sails.controllers.bot.savePhrase(req, res, user);
                 break;
         }
+    },
+
+
+    /**
+     * A private function to save new phrases
+     * 
+     * @param {object} req The request object from telegramWebhook
+     * @param {object} res The response object from telegramWebhook
+     * @param {object} user The user object from the database
+     * @author Nagarjun Palavalli <me@nagarjun.co>
+     */
+    savePhrase: function(req, res, user) {
+        
+        var message = req.body.message;
+
+        // Generate a hash of the 
+        var md5 = require('md5');
+        var hash = md5(message.text);
+
+        Phrases.findOne({
+            user: user.id,
+            hash: hash
+        }).exec(function(error, existingPhrase) {
+
+            if (error) {
+                sails.log.error(error);
+                return res.serverError('Database error. Unable to fulfill your request.');
+            }
+
+            if (existingPhrase) {
+                sails.controllers.telegram.sendMessage(req, res, {
+                    chat_id: message.chat.id,
+                    text: 'This phrase was already saved before. I\'ll be sure to remind you of it from time to time.'
+                });
+            } else {
+                Phrases.create({
+                    user: user.id,
+                    phrase: message.text,
+                    hash: hash
+                }).exec(function(error, phrase) {
+
+                    if (error) {
+                        sails.log.error(error);
+                        return res.serverError('Database error. Unable to fulfill your request.');
+                    }
+
+                    // Send the user a confirmation message
+                    sails.controllers.telegram.sendMessage(req, res, {
+                        chat_id: message.chat.id,
+                        text: 'Done! I saved the phrase and will remind you of it from time to time.'
+                    });
+                });
+            }
+        });
     }
 };

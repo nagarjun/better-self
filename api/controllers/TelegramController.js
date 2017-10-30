@@ -23,7 +23,7 @@ module.exports = {
 
         var options = {
             method: 'POST',
-            url: 'https://api.telegram.org/bot456233178:AAG0-LLU1eaVNZBlRpaL3QU4P86MtH9l95w/sendMessage',
+            url: process.env.TELEGRAM_HOST + '/sendMessage',
             headers: {
                 'cache-control': 'no-cache',
                 'content-type': 'application/json'

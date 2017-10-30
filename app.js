@@ -55,6 +55,10 @@ try {
   }
 }
 
+// Load environment variables if not running as production
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').load();
+}
 
 // Start server
 sails.lift(rc('sails'));

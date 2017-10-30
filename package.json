@@ -1,10 +1,11 @@
 {
   "name": "better-self-bot",
   "private": true,
-  "version": "0.0.0",
-  "description": "a Sails application",
+  "version": "1.0.0",
+  "description": "BetterSelf is a Telegram bot that helps you reshape your mind through the repetition of certain phrases you find inspiring and empowering.",
   "keywords": [],
   "dependencies": {
+    "dotenv": "^4.0.0",
     "ejs": "2.3.4",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
@@ -20,10 +21,11 @@
     "grunt-sync": "0.5.2",
     "include-all": "^1.0.0",
     "joi": "^13.0.1",
+    "md5": "^2.2.1",
     "rc": "1.0.1",
     "request": "^2.83.0",
-    "sails": "~0.12.13",
-    "sails-disk": "~0.10.9"
+    "sails": "~0.12.4",
+    "sails-mongo": "^0.12.3"
   },
   "scripts": {
     "debug": "node debug app.js",
@@ -34,6 +36,6 @@
     "type": "git",
     "url": "git://github.com/Nagarjun/better-self-bot.git"
   },
-  "author": "Nagarjun",
-  "license": ""
+  "author": "Nagarjun Palavalli <me@nagarjun.co>",
+  "license": "MIT"
 }

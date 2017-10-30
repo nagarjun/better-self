@@ -22,6 +22,6 @@
 
 module.exports.routes = {
 
-    '/': { view: 'homepage' },
+    '/': { view: 'index' },
     'post /telegram-webhook': 'botcontroller.telegramwebhook'
 };

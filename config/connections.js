@@ -20,18 +20,18 @@
  */
 module.exports.connections = {
 
-    mongoServer: {
-        adapter: 'sails-mongo',
-        host: 'localhost',
-        port: 27017,
-        // user: '',
-        // password: '',
-        database: 'better-self'
-    }
-
     // mongoServer: {
     //     adapter: 'sails-mongo',
-    //     url: process.env.MONGODB_CONNECTION_STRING,
-    //     ssl: true
+    //     host: 'localhost',
+    //     port: 27017,
+    //     // user: '',
+    //     // password: '',
+    //     database: 'better-self'
     // }
+
+    mongoServer: {
+        adapter: 'sails-mongo',
+        url: process.env.MONGODB_CONNECTION_STRING,
+        ssl: true
+    }
 };

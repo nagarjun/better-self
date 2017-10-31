@@ -1,30 +1,74 @@
-/**
- * importer.less
- *
- * By default, new Sails projects are configured to compile this file
- * from LESS to CSS.  Unlike CSS files, LESS files are not compiled and
- * included automatically unless they are imported below.
- *
- * The LESS files imported below are compiled and included in the order
- * they are listed.  Mixins, variables, etc. should be imported first
- * so that they can be accessed by subsequent LESS stylesheets.
- *
- * (Just like the rest of the asset pipeline bundled in Sails, you can
- * always omit, customize, or replace this behavior with SASS, SCSS,
- * or any other Grunt tasks you like.)
- */
+// Bootstrap by Twitter
+@import "../bower_components/bootstrap/less/bootstrap.less";
+@import "../bower_components/bootstrap/less/mixins.less";
+@import "../bower_components/bootstrap/less/normalize.less";
+@import "../bower_components/bootstrap/less/responsive-utilities.less";
+@import "../bower_components/bootstrap/less/scaffolding.less";
+@import "../bower_components/bootstrap/less/utilities.less";
+@import "../bower_components/bootstrap/less/variables.less";
 
+// Variables
+@bsb-color-primary: #f0c145;
 
+// Global Styles
+@import url('https://rsms.me/inter/inter-ui.css');
 
-// For example:
-//
-// @import 'variables/colors.less';
-// @import 'mixins/foo.less';
-// @import 'mixins/bar.less';
-// @import 'mixins/baz.less';
-//
-// @import 'styleguide.less';
-// @import 'pages/login.less';
-// @import 'pages/signup.less';
-//
-// etc.
+body {
+    font-family: 'Inter UI', sans-serif;
+}
+
+// Page
+.main-heading {
+    padding: 64px 0px;
+    background-color: @bsb-color-primary;
+    text-align: center;
+    width: 100%;
+    height: auto;
+
+    img {
+        width: 96px;
+        height: auto;
+    }
+
+    h1 {
+        margin: 32px 0px 12px 0px;
+        line-height: 1;
+        color: @gray-base;
+        font-weight: 600;
+    }
+
+    p {
+        font-size: 18px;
+        line-height: 1.5;
+    }
+
+    p:last-child {
+        margin-top: 32px;
+        font-size: 14px;
+        line-height: 1;
+    }
+
+    .button:link,
+    .button:visited {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 12px 20px;
+        background-color: #f5f5f5;
+        border-radius: 3px;
+        text-transform: uppercase;
+        line-height: 1;
+        box-shadow: 2px 2px 18px 0px rgba(0, 0, 0, 0.10);
+    }
+
+    .button:hover,
+    .button:active {
+        background-color: @body-bg;
+        text-decoration: none;
+    }
+
+    .button > img {
+        margin-right: 8px;
+        max-width: 32px;
+        height: auto;
+    }
+}

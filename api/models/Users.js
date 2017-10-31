@@ -5,7 +5,6 @@
  * @docs        	http://sailsjs.org/documentation/concepts/models-and-orm/models
  * @author 			Nagarjun Palavalli <me@nagarjun.co>
  */
-
 module.exports = {
 
     attributes: {

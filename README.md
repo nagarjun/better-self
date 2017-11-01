@@ -1,3 +1,3 @@
-# better-self-bot
+# BetterSelf - Telegram Bot
 
-a [Sails](http://sailsjs.org) application
+BetterSelf is a Telegram bot to help you reshape your mind through the repetition of certain phrases that you find inspiring and empowering.

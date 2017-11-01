@@ -8,8 +8,12 @@
 module.exports = {
 
     attributes: {
+        // Telegram
         telegramId: { type: 'string', unique: true, required: true },
         isTelegramBot: { type: 'boolean', defaultsTo: false },
+        telegramChatId: { type: 'string', defaultsTo: null },
+
+        // User
         firstName: { type: 'string', required: true }
     }
 };

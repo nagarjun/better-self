@@ -63,7 +63,22 @@ module.exports = {
                         return res.serverError('Database error. Unable to fulfill your request.');
                     }
                     
-                    sails.controllers.bot.parseMessage(req, res, user);
+                    // Update the Telegram Chat ID if it has changed, otherwise, continue
+                    if (user.telegramChatId) { params.message.chat.id += ''; }
+                    if (params.message.chat.id !== user.telegramChatId) {
+                        user.telegramChatId = params.message.chat.id;
+                        user.save(function(error) {
+
+                            if (error) {
+                                sails.log.error(error);
+                                return res.serverError('Database error. Unable to fulfill your request.');
+                            }
+
+                            sails.controllers.bot.parseMessage(req, res, user);
+                        });
+                    } else {
+                        sails.controllers.bot.parseMessage(req, res, user);
+                    }
                 });
             } else {
                 return res.end('Hmm.. I\'m not sure what to do.');
@@ -86,7 +101,7 @@ module.exports = {
         var message = req.body.message;
 
         // Check if the user is simply setting their message frequency
-        var messageFrequencies = ['Once an hour', 'Every 4 hours', 'Every 6 hours', 'Every 12 hours', 'Once a day'];
+        var messageFrequencies = ['Every 6 hours', 'Every 12 hours', 'Once a day'];
         if (messageFrequencies.indexOf(message.text) > -1) {
             // @TODO Save the message frequency to the user's document
             return sails.controllers.telegram.sendMessage(req, res, {
@@ -100,7 +115,7 @@ module.exports = {
             case '/start':
                 sails.controllers.telegram.sendMessage(req, res, {
                     chat_id: message.chat.id,
-                    text: 'Hello there, ' + message.from.first_name + '! 👋 I\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.'
+                    text: 'Hello there, ' + message.from.first_name + '! 👋 \n\nI\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.'
                 });
                 break;
             
@@ -123,8 +138,6 @@ module.exports = {
                     "text": "How often should I send you inspiring phrases from your list?",
                     "reply_markup": {
                         "keyboard": [
-                            [ { "text": "Once an hour" } ],
-                            [ { "text": "Every 4 hours" } ],
                             [ { "text": "Every 6 hours" } ],
                             [ { "text": "Every 12 hours" } ],
                             [ { "text": "Once a day" } ]

@@ -1,0 +1,21 @@
+{
+  "name": "better-self-bot",
+  "description": "BetterSelf is a Telegram bot that helps you reshape your mind through the repetition of certain phrases you find inspiring and empowering.",
+  "main": "app.js",
+  "authors": [
+    "Nagarjun Palavalli <me@nagarjun.co>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/nagarjun/better-self",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.7"
+  }
+}

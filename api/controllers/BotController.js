@@ -63,7 +63,22 @@ module.exports = {
                         return res.serverError('Database error. Unable to fulfill your request.');
                     }
                     
-                    sails.controllers.bot.parseMessage(req, res, user);
+                    // Update the Telegram Chat ID if it has changed, otherwise, continue
+                    if (user.telegramChatId) { params.message.chat.id += ''; }
+                    if (params.message.chat.id !== user.telegramChatId) {
+                        user.telegramChatId = params.message.chat.id;
+                        user.save(function(error) {
+
+                            if (error) {
+                                sails.log.error(error);
+                                return res.serverError('Database error. Unable to fulfill your request.');
+                            }
+
+                            sails.controllers.bot.parseMessage(req, res, user);
+                        });
+                    } else {
+                        sails.controllers.bot.parseMessage(req, res, user);
+                    }
                 });
             } else {
                 return res.end('Hmm.. I\'m not sure what to do.');
@@ -86,10 +101,10 @@ module.exports = {
         var message = req.body.message;
 
         // Check if the user is simply setting their message frequency
-        var messageFrequencies = ['Once an hour', 'Every 4 hours', 'Every 6 hours', 'Every 12 hours', 'Once a day'];
+        var messageFrequencies = ['Every 6 hours', 'Every 12 hours', 'Once a day'];
         if (messageFrequencies.indexOf(message.text) > -1) {
             // @TODO Save the message frequency to the user's document
-            sails.controllers.telegram.sendMessage(req, res, {
+            return sails.controllers.telegram.sendMessage(req, res, {
                 chat_id: message.chat.id,
                 text: 'Ok, I\'ll send you an inspiring phrase ' + message.text.toLowerCase() + '.'
             });
@@ -100,7 +115,34 @@ module.exports = {
             case '/start':
                 sails.controllers.telegram.sendMessage(req, res, {
                     chat_id: message.chat.id,
-                    text: 'Hello there, ' + message.from.first_name + '! 👋 I\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.'
+                    text: 'Hello there, ' + message.from.first_name + '! 👋 \n\nI\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.'
+                });
+                break;
+            
+            case '/get':
+                sails.controllers.bot.getRandomPhrase(req, res, user);
+                break;
+            
+            case '/edit':
+                var editUrl = process.env.APPLICATION_URL + '/' + user.id + '/phrases';
+                sails.controllers.telegram.sendMessage(req, res, {
+                    chat_id: message.chat.id,
+                    text: 'View and manage your phrases here: [' + editUrl + '](' + editUrl + ')',
+                    parse_mode: 'Markdown'
+                });
+                break;
+            
+            case '/settings':
+                sails.controllers.telegram.sendMessage(req, res, {
+                    "chat_id": message.chat.id,
+                    "text": "How often should I send you inspiring phrases from your list?",
+                    "reply_markup": {
+                        "keyboard": [
+                            [ { "text": "Every 6 hours" } ],
+                            [ { "text": "Every 12 hours" } ],
+                            [ { "text": "Once a day" } ]
+                        ]
+                    }
                 });
                 break;
 
@@ -108,6 +150,45 @@ module.exports = {
                 sails.controllers.bot.savePhrase(req, res, user);
                 break;
         }
+    },
+
+
+    /**
+     * A private function that sends the user a random phrase from 
+     * their list
+     * 
+     * @param {object} req The request object from telegramWebhook
+     * @param {object} res The response object from telegramWebhook
+     * @param {object} user The user object from the database
+     * @author Nagarjun Palavalli <me@nagarjun.co>
+     */
+    getRandomPhrase: function(req, res, user) {
+
+        var message = req.body.message;
+
+        Phrases.find({ user: user.id }).exec(function(error, userPhrases) {
+
+            if (error) {
+                sails.log.error(error);
+                return sails.controllers.telegram.sendMessage(req, res, {
+                    chat_id: message.chat.id,
+                    text: 'Uh oh! I couldn\'t access your phrases. Please try again later.'
+                });
+            }
+
+            if (userPhrases.length < 1) {
+                return sails.controllers.telegram.sendMessage(req, res, {
+                    chat_id: message.chat.id,
+                    text: 'Looks like you didn\'t save any phrases yet. Send me one now so I can save it. 🙂'
+                });
+            }
+
+            return sails.controllers.telegram.sendMessage(req, res, {
+                chat_id: message.chat.id,
+                text: '💡 *Ding..* \n\n' + userPhrases[UtilsService.getRandomInt(0, userPhrases.length - 1)].phrase,
+                parse_mode: 'Markdown'
+            });
+        });
     },
 
 
@@ -138,7 +219,7 @@ module.exports = {
             }
 
             if (existingPhrase) {
-                sails.controllers.telegram.sendMessage(req, res, {
+                return sails.controllers.telegram.sendMessage(req, res, {
                     chat_id: message.chat.id,
                     text: 'This phrase was already saved before. I\'ll be sure to remind you of it from time to time.'
                 });
@@ -155,7 +236,7 @@ module.exports = {
                     }
 
                     // Send the user a confirmation message
-                    sails.controllers.telegram.sendMessage(req, res, {
+                    return sails.controllers.telegram.sendMessage(req, res, {
                         chat_id: message.chat.id,
                         text: 'Done! I saved the phrase and will remind you of it from time to time.'
                     });

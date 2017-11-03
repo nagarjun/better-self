@@ -14,6 +14,7 @@ module.exports = {
         telegramChatId: { type: 'string', defaultsTo: null },
 
         // User
-        firstName: { type: 'string', required: true }
+        firstName: { type: 'string', required: true },
+        messageFrequency: { type: 'string', defaultsTo: '2' }
     }
 };

@@ -20,5 +20,33 @@ module.exports = {
         max = Math.floor(max);
         
         return Math.floor(Math.random() * (max - min)) + min;
+    },
+
+
+    /**
+     * Converts strings like 'Twice a day' etc. to 
+     * a numeric value to store in the database
+     * 
+     * @param {string} frequency The message frequency string from the request
+     * @author Nagarjun Palavalli <me@nagarjun.co>
+     */
+    parseMessageFrequencyString: function(frequency) {
+
+        var parsedFrequency = null;
+        
+        switch (frequency) {
+            case 'Twice a day':
+                parsedFrequency = '2';
+                break;
+            
+            case 'Once a day':
+                parsedFrequency = '1';
+                break;
+        
+            default:
+                break;
+        }
+
+        return parsedFrequency;
     }
 };

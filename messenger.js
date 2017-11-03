@@ -45,21 +45,21 @@ var config = {
 	},
 	connections: {
 		// Local
-		default: {
-			adapter: 'sails-mongo',
-			host: 'localhost',
-			port: 27017,
-			// user: '',
-			// password: '',
-			database: 'better-self'
-		},
-
-		// Production
 		// default: {
 		// 	adapter: 'sails-mongo',
-		// 	url: process.env.MONGODB_CONNECTION_STRING,
-		// 	ssl: true
-		// }
+		// 	host: 'localhost',
+		// 	port: 27017,
+		// 	// user: '',
+		// 	// password: '',
+		// 	database: 'better-self'
+		// },
+
+		// Production
+		default: {
+			adapter: 'sails-mongo',
+			url: process.env.MONGODB_CONNECTION_STRING,
+			ssl: true
+		}
 	}
 };
 

@@ -5,6 +5,7 @@
   "description": "BetterSelf is a Telegram bot that helps you reshape your mind through the repetition of certain phrases you find inspiring and empowering.",
   "keywords": [],
   "dependencies": {
+    "async": "1.5.2",
     "bower": "^1.8.2",
     "dotenv": "^4.0.0",
     "ejs": "2.3.4",
@@ -23,10 +24,12 @@
     "include-all": "^1.0.0",
     "joi": "^13.0.1",
     "md5": "^2.2.1",
+    "moment": "^2.19.1",
     "rc": "1.0.1",
     "request": "^2.83.0",
     "sails": "~0.12.4",
-    "sails-mongo": "^0.12.3"
+    "sails-mongo": "^0.12.3",
+    "waterline": "~0.11.0"
   },
   "scripts": {
     "debug": "node debug app.js",

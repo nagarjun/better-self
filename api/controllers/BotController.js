@@ -7,6 +7,10 @@
 
 module.exports = {
 
+    say: function() {
+        sails.log('Say');
+    },
+
     /**
      * This method handles incoming messages from Telegram 
      * users and automatically routes it to other handler 
@@ -185,7 +189,7 @@ module.exports = {
 
             return sails.controllers.telegram.sendMessage(req, res, {
                 chat_id: message.chat.id,
-                text: '💡 *Ding..* \n\n' + userPhrases[UtilsService.getRandomInt(0, userPhrases.length - 1)].phrase,
+                text: '💡 *Time for some inspiration..* \n\n' + userPhrases[UtilsService.getRandomInt(0, userPhrases.length)].phrase,
                 parse_mode: 'Markdown'
             });
         });

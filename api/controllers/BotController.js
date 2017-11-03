@@ -7,10 +7,6 @@
 
 module.exports = {
 
-    say: function() {
-        sails.log('Say');
-    },
-
     /**
      * This method handles incoming messages from Telegram 
      * users and automatically routes it to other handler 
@@ -105,54 +101,49 @@ module.exports = {
         var message = req.body.message;
 
         // Check if the user is simply setting their message frequency
-        var messageFrequencies = ['Every 6 hours', 'Every 12 hours', 'Once a day'];
+        var messageFrequencies = ['Twice a day', 'Once a day'];
         if (messageFrequencies.indexOf(message.text) > -1) {
-            // @TODO Save the message frequency to the user's document
-            return sails.controllers.telegram.sendMessage(req, res, {
-                chat_id: message.chat.id,
-                text: 'Ok, I\'ll send you an inspiring phrase ' + message.text.toLowerCase() + '.'
-            });
-        }
+            sails.controllers.bot.saveMessageFrequency(req, res, user);
+        } else {
+            // Perform an action based on the message text
+            switch (message.text) {
+                case '/start':
+                    sails.controllers.telegram.sendMessage(req, res, {
+                        chat_id: message.chat.id,
+                        text: 'Hello there, ' + message.from.first_name + '! 👋 \n\nI\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.'
+                    });
+                    break;
+                
+                case '/get':
+                    sails.controllers.bot.getRandomPhrase(req, res, user);
+                    break;
+                
+                case '/edit':
+                    var editUrl = process.env.APPLICATION_URL + '/' + user.id + '/phrases';
+                    sails.controllers.telegram.sendMessage(req, res, {
+                        chat_id: message.chat.id,
+                        text: 'View and manage your phrases here: [' + editUrl + '](' + editUrl + ')',
+                        parse_mode: 'Markdown'
+                    });
+                    break;
+                
+                case '/settings':
+                    sails.controllers.telegram.sendMessage(req, res, {
+                        "chat_id": message.chat.id,
+                        "text": "How often should I send you inspiring phrases from your list?",
+                        "reply_markup": {
+                            "keyboard": [
+                                [ { "text": "Twice a day" } ],
+                                [ { "text": "Once a day" } ]
+                            ]
+                        }
+                    });
+                    break;
 
-        // Perform an action based on the message text
-        switch (message.text) {
-            case '/start':
-                sails.controllers.telegram.sendMessage(req, res, {
-                    chat_id: message.chat.id,
-                    text: 'Hello there, ' + message.from.first_name + '! 👋 \n\nI\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.'
-                });
-                break;
-            
-            case '/get':
-                sails.controllers.bot.getRandomPhrase(req, res, user);
-                break;
-            
-            case '/edit':
-                var editUrl = process.env.APPLICATION_URL + '/' + user.id + '/phrases';
-                sails.controllers.telegram.sendMessage(req, res, {
-                    chat_id: message.chat.id,
-                    text: 'View and manage your phrases here: [' + editUrl + '](' + editUrl + ')',
-                    parse_mode: 'Markdown'
-                });
-                break;
-            
-            case '/settings':
-                sails.controllers.telegram.sendMessage(req, res, {
-                    "chat_id": message.chat.id,
-                    "text": "How often should I send you inspiring phrases from your list?",
-                    "reply_markup": {
-                        "keyboard": [
-                            [ { "text": "Every 6 hours" } ],
-                            [ { "text": "Every 12 hours" } ],
-                            [ { "text": "Once a day" } ]
-                        ]
-                    }
-                });
-                break;
-
-            default:
-                sails.controllers.bot.savePhrase(req, res, user);
-                break;
+                default:
+                    sails.controllers.bot.savePhrase(req, res, user);
+                    break;
+            }
         }
     },
 
@@ -191,6 +182,37 @@ module.exports = {
                 chat_id: message.chat.id,
                 text: '💡 *Time for some inspiration..* \n\n' + userPhrases[UtilsService.getRandomInt(0, userPhrases.length)].phrase,
                 parse_mode: 'Markdown'
+            });
+        });
+    },
+
+
+    /**
+     * A private function to save the user's message frequency
+     * 
+     * @param {object} req The request object from telegramWebhook
+     * @param {object} res The response object from telegramWebhook
+     * @param {object} user The user object from the database
+     * @author Nagarjun Palavalli <me@nagarjun.co>
+     */
+    saveMessageFrequency: function(req, res, user) {
+
+        var message = req.body.message;
+
+        user.messageFrequency = UtilsService.parseMessageFrequencyString(message.text);
+        user.save(function(error) {
+
+            if (error) {
+                sails.log.error(error);
+                return sails.controllers.telegram.sendMessage(req, res, {
+                    chat_id: message.chat.id,
+                    text: 'Uh oh! I couldn\'t update your message frequency. Please try again later.'
+                });
+            }
+
+            return sails.controllers.telegram.sendMessage(req, res, {
+                chat_id: message.chat.id,
+                text: 'Ok, I\'ll send you an inspiring phrase ' + message.text.toLowerCase() + '.'
             });
         });
     },

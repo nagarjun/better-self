@@ -15,30 +15,6 @@ module.exports = {
 
         // User
         firstName: { type: 'string', required: true },
-        messageFrequency: { type: 'number', defaultsTo: 2 }
-    },
-
-
-    beforeUpdate: function(values, next) {
-
-        // Set messageFrequency based on the supplied human-friendly value
-        if (values.hasOwnProperty('messageFrequency')) {
-            switch (values.messageFrequency) {
-                case 'Twice a day':
-                    values.messageFrequency = 2;
-                    break;
-                
-                case 'Once a day':
-                    values.messageFrequency = 1;
-                    break;
-            
-                default:
-                    break;
-            }
-
-            cb();
-        } else {
-            cb();
-        }
+        messageFrequency: { type: 'string', defaultsTo: '2' }
     }
 };

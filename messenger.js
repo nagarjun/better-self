@@ -84,7 +84,7 @@ waterline.initialize(config, function(error, waterlineInstance) {
 			break;
 		
 		case 16:
-			sendMessages({ messageFrequency: 2 }); // Send only to users who want to see messages twice a day
+			sendMessages({ messageFrequency: '2' }); // Send only to users who want to see messages twice a day
 			break;
 	
 		default:

@@ -60,6 +60,9 @@ var config = {
 		// 	url: process.env.MONGODB_CONNECTION_STRING,
 		// 	ssl: true
 		// }
+	},
+	defaults: {
+		migrate: 'alter'
 	}
 };
 
@@ -79,11 +82,11 @@ waterline.initialize(config, function(error, waterlineInstance) {
 	var utcNow = moment().utc();
 	
 	switch (utcNow.hours()) {
-		case 8:
+		case 4:
 			sendMessages({}); // Send to all users
 			break;
 		
-		case 16:
+		case 12:
 			sendMessages({ messageFrequency: '2' }); // Send only to users who want to see messages twice a day
 			break;
 	

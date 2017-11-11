@@ -24,29 +24,57 @@ module.exports = {
 
 
     /**
-     * Converts strings like 'Twice a day' etc. to 
-     * a numeric value to store in the database
+     * Converts strings like '4 AM' etc. to a numeric hour value (24 hour format) to 
+     * store in the database
      * 
-     * @param {string} frequency The message frequency string from the request
+     * @param {string} displayHour A value from "12 AM" to "11 PM"
      * @author Nagarjun Palavalli <me@nagarjun.co>
      */
-    parseMessageFrequencyString: function(frequency) {
+    parseMessageFrequencyString: function(displayHour) {
 
-        var parsedFrequency = null;
-        
-        switch (frequency) {
-            case 'Twice a day':
-                parsedFrequency = '2';
-                break;
-            
-            case 'Once a day':
-                parsedFrequency = '1';
-                break;
-        
-            default:
-                break;
+        var parsedHour = 0; // Always start with 12 AM
+
+        if (displayHour === '12 PM') {
+            return 12;
         }
 
-        return parsedFrequency;
+        if (displayHour !== '12 AM') {
+            var deconstructedTime = displayHour.split(' ');
+            
+            parsedHour = parseInt(deconstructedTime[0]);
+            if (deconstructedTime[1] === 'PM') {
+                parsedHour += 12;
+            }
+        }
+        
+        return parsedHour;
+    },
+
+
+    /**
+     * Takes an array of hours like [4, 12] and returns a human-friendly 
+     * string like '4 PM, 12 PM'.
+     * 
+     * @param {array} hoursArray An array of hours from 0 to 23
+     * @author Nagarjun Palavalli <me@nagarjun.co>
+     */
+    humanFriendlyHours: function(hoursArray) {
+
+        var friendlyStrings = [];
+        for (var i = 0; i < hoursArray.length; i++) {
+            var hour = hoursArray[i];
+            
+            if (hour === 0) {
+                friendlyStrings.push('12 AM');
+            } else if (hour === 12) {
+                friendlyStrings.push('12 PM');
+            } else if ((hour > 0) && (hour < 12)) {
+                friendlyStrings.push(hour + ' AM');
+            } else {
+                friendlyStrings.push(hour - 12 + ' PM');
+            }
+        }
+
+        return friendlyStrings.join(', ');
     }
 };

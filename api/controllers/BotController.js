@@ -101,8 +101,8 @@ module.exports = {
         var message = req.body.message;
 
         // Check if the user is simply setting their message frequency
-        var messageFrequencies = ['Twice a day', 'Once a day'];
-        if (messageFrequencies.indexOf(message.text) > -1) {
+        sails.config.constants.time.hourBlocks.push('Clear timings');
+        if (sails.config.constants.time.hourBlocks.indexOf(message.text) > -1) {
             sails.controllers.bot.saveMessageFrequency(req, res, user);
         } else {
             // Perform an action based on the message text
@@ -130,11 +130,46 @@ module.exports = {
                 case '/settings':
                     sails.controllers.telegram.sendMessage(req, res, {
                         "chat_id": message.chat.id,
-                        "text": "How often should I send you inspiring phrases from your list?",
+                        "text": "At what times of the day should I send you messages?\n\n*Important*: I can only save your preference in UTC / GMT (London, UK time). [Click here](http://www.thetimezoneconverter.com/) to check your local time.",
+                        "parse_mode": "Markdown",
+                        "disable_web_page_preview": true,
                         "reply_markup": {
                             "keyboard": [
-                                [ { "text": "Twice a day" } ],
-                                [ { "text": "Once a day" } ]
+                                [
+                                    { "text": "12 AM" },
+                                    { "text": "1 AM" },
+                                    { "text": "2 AM" },
+                                    { "text": "3 AM" },
+                                    { "text": "4 AM" },
+                                    { "text": "5 AM" },
+                                ],
+                                [
+                                    { "text": "6 AM" },
+                                    { "text": "7 AM" },
+                                    { "text": "8 AM" },
+                                    { "text": "9 AM" },
+                                    { "text": "10 AM" },
+                                    { "text": "11 AM" },
+                                ],
+                                [
+                                    { "text": "12 PM" },
+                                    { "text": "1 PM" },
+                                    { "text": "2 PM" },
+                                    { "text": "3 PM" },
+                                    { "text": "4 PM" },
+                                    { "text": "5 PM" },
+                                ],
+                                [
+                                    { "text": "6 PM" },
+                                    { "text": "7 PM" },
+                                    { "text": "8 PM" },
+                                    { "text": "9 PM" },
+                                    { "text": "10 PM" },
+                                    { "text": "11 PM" },
+                                ],
+                                [
+                                    { text: 'Clear timings' }
+                                ]
                             ]
                         }
                     });
@@ -199,20 +234,36 @@ module.exports = {
 
         var message = req.body.message;
 
-        user.messageFrequency = UtilsService.parseMessageFrequencyString(message.text);
+        // Construct the message frequency array
+        var responseText = '';
+
+        if (message.text !== 'Clear timings') {
+            var hour = UtilsService.parseMessageFrequencyString(message.text);
+            
+            if (user.messageFrequency.indexOf(hour) < 0)  {
+                user.messageFrequency.push(hour);
+            }
+
+            user.messageFrequency = _.sortBy(user.messageFrequency);
+            responseText = 'Ok, I\'ll send you an inspiring phrase at these times (UTC / GMT): ' + UtilsService.humanFriendlyHours(user.messageFrequency) + '.';
+        } else {
+            user.messageFrequency = [];
+            responseText = 'Ok, I\'ve cleared your timings. I will no longer send you any messages. Run /settings to tell me when I should message you.';
+        }
+
         user.save(function(error) {
 
             if (error) {
                 sails.log.error(error);
                 return sails.controllers.telegram.sendMessage(req, res, {
                     chat_id: message.chat.id,
-                    text: 'Uh oh! I couldn\'t update your message frequency. Please try again later.'
+                    text: 'Uh oh! I couldn\'t update your preference. Please try again later.'
                 });
             }
 
             return sails.controllers.telegram.sendMessage(req, res, {
                 chat_id: message.chat.id,
-                text: 'Ok, I\'ll send you an inspiring phrase ' + message.text.toLowerCase() + '.'
+                text: responseText
             });
         });
     },

@@ -15,6 +15,6 @@ module.exports = {
 
         // User
         firstName: { type: 'string', required: true },
-        messageFrequency: { type: 'string', defaultsTo: '2' }
+        messageFrequency: { type: 'array', defaultsTo: [4, 12] }
     }
 };

@@ -80,20 +80,7 @@ waterline.initialize(config, function(error, waterlineInstance) {
 
 	// Check UTC time to send messages based on users.messageFrequency
 	var utcNow = moment().utc();
-	
-	switch (utcNow.hours()) {
-		case 4:
-			sendMessages({}); // Send to all users
-			break;
-		
-		case 12:
-			sendMessages({ messageFrequency: '2' }); // Send only to users who want to see messages twice a day
-			break;
-	
-		default:
-			process.exit();
-			break;
-	}
+	sendMessages({ messageFrequency: utcNow.hours() });
 });
 
 

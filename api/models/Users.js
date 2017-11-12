@@ -12,6 +12,7 @@ module.exports = {
         telegramId: { type: 'string', unique: true, required: true },
         isTelegramBot: { type: 'boolean', defaultsTo: false },
         telegramChatId: { type: 'string', defaultsTo: null },
+        chatDeleted: { type: 'boolean', defaultsTo: false  } ,
 
         // User
         firstName: { type: 'string', required: true },

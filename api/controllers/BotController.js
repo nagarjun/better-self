@@ -63,6 +63,17 @@ module.exports = {
                         return res.serverError('Database error. Unable to fulfill your request.');
                     }
                     
+                    // Update user.chatDeleted when a message is sent
+                    if (user.chatDeleted) {
+                        user.chatDeleted = false;
+                        user.save(function(error) {
+
+                            if (error) {
+                                sails.log.error(error);
+                            }
+                        });
+                    }
+
                     // Update the Telegram Chat ID if it has changed, otherwise, continue
                     if (user.telegramChatId) { params.message.chat.id += ''; }
                     if (params.message.chat.id !== user.telegramChatId) {
@@ -110,7 +121,8 @@ module.exports = {
                 case '/start':
                     sails.controllers.telegram.sendMessage(req, res, {
                         chat_id: message.chat.id,
-                        text: 'Hello there, ' + message.from.first_name + '! 👋 \n\nI\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.'
+                        text: 'Hello there, ' + message.from.first_name + '! 👋 \n\nI\'ll periodically send you phrases that you find inspiring. To get started, simply send me a message and I\'ll save that as a phrase.\n\n*Important:* I will send you messages at these times (UTC / GMT): ' + UtilsService.humanFriendlyHours(user.messageFrequency) + '. Run /settings to change your preference.',
+                        parse_mode: 'Markdown'
                     });
                     break;
                 
@@ -215,7 +227,7 @@ module.exports = {
 
             return sails.controllers.telegram.sendMessage(req, res, {
                 chat_id: message.chat.id,
-                text: '💡 *Time for some inspiration..* \n\n' + userPhrases[UtilsService.getRandomInt(0, userPhrases.length)].phrase,
+                text: '💡 \n\n' + userPhrases[UtilsService.getRandomInt(0, userPhrases.length)].phrase,
                 parse_mode: 'Markdown'
             });
         });

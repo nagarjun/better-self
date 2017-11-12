@@ -61,18 +61,23 @@ module.exports = {
     humanFriendlyHours: function(hoursArray) {
 
         var friendlyStrings = [];
-        for (var i = 0; i < hoursArray.length; i++) {
-            var hour = hoursArray[i];
-            
-            if (hour === 0) {
-                friendlyStrings.push('12 AM');
-            } else if (hour === 12) {
-                friendlyStrings.push('12 PM');
-            } else if ((hour > 0) && (hour < 12)) {
-                friendlyStrings.push(hour + ' AM');
-            } else {
-                friendlyStrings.push(hour - 12 + ' PM');
+        
+        if (hoursArray.length > 0) {
+            for (var i = 0; i < hoursArray.length; i++) {
+                var hour = hoursArray[i];
+                
+                if (hour === 0) {
+                    friendlyStrings.push('12 AM');
+                } else if (hour === 12) {
+                    friendlyStrings.push('12 PM');
+                } else if ((hour > 0) && (hour < 12)) {
+                    friendlyStrings.push(hour + ' AM');
+                } else {
+                    friendlyStrings.push(hour - 12 + ' PM');
+                }
             }
+        } else {
+            friendlyStrings.push('Not configured');
         }
 
         return friendlyStrings.join(', ');

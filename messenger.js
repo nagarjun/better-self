@@ -20,7 +20,8 @@ var waterline = new Waterline();
 
 // Model definitions
 var usersModel = require('./api/models/Users.js'),
-	phrasesModel = require('./api/models/Phrases.js');
+	phrasesModel = require('./api/models/Phrases.js'),
+	runsModel = require('./api/models/Runs.js');
 
 var usersCollection = Waterline.Collection.extend({
 	identity: 'users',
@@ -34,9 +35,16 @@ var phrasesCollection = Waterline.Collection.extend({
 	attributes: phrasesModel.attributes
 });
 
+var runsCollection = Waterline.Collection.extend({
+	identity: 'runs',
+	connection: 'default',
+	attributes: runsModel.attributes
+});
+
 // Attach models to the running Waterline instance
 waterline.loadCollection(usersCollection);
 waterline.loadCollection(phrasesCollection);
+waterline.loadCollection(runsCollection);
 
 // Configure and initialize the Waterline instance
 var config = {
@@ -66,7 +74,7 @@ var config = {
 	}
 };
 
-var Users, Phrases;
+var Users, Phrases, Runs;
 waterline.initialize(config, function(error, waterlineInstance) {
 
 	if (error) {
@@ -77,35 +85,25 @@ waterline.initialize(config, function(error, waterlineInstance) {
 	// Test out fully initialized models
 	Users = waterlineInstance.collections.users;
 	Phrases = waterlineInstance.collections.phrases;
+	Runs = waterlineInstance.collections.runs;
 
-	// Check UTC time to send messages based on users.messageFrequency
-	var utcNow = moment().utc();
-	
-	switch (utcNow.hours()) {
-		case 4:
-			sendMessages({}); // Send to all users
-			break;
-		
-		case 12:
-			sendMessages({ messageFrequency: '2' }); // Send only to users who want to see messages twice a day
-			break;
-	
-		default:
-			process.exit();
-			break;
-	}
+	// Send messages to users
+	sendMessages();
 });
 
 
 /**
  * Responsible for sending messages to users based on 
- * the supplied databaseQuery
- * 
- * @param {object} databaseQuery The query to perform when searching for users
+ * the UTC time
  */
-function sendMessages(databaseQuery) {
+function sendMessages() {
 
-	Users.find(databaseQuery).exec(function(error, userList) {
+	var utcNow = moment().utc();
+
+	Users.find({
+		chatDeleted: false,
+		messageFrequency: utcNow.hours()
+	}).exec(function(error, userList) {
 
 		if (error) {
 			console.error(error);
@@ -116,7 +114,8 @@ function sendMessages(databaseQuery) {
 			request = require('request'),
 			async = require('async');
 		
-		var messageCount = 0;
+		var recipients = [],
+			failedRecipients = [];
 		async.each(userList, function(user, callback) {
 
 			Phrases.native(function(error, collection) {
@@ -146,7 +145,7 @@ function sendMessages(databaseQuery) {
 							},
 							body: {
 								chat_id: user.telegramChatId,
-								text: '💡 *Time for some inspiration..* \n\n' + phrase.phrase,
+								text: '💡 \n\n' + phrase.phrase,
 								parse_mode: 'Markdown'
 							},
 							json: true
@@ -158,9 +157,27 @@ function sendMessages(databaseQuery) {
 								callback('Unable to send the message.');
 							}
 							
-							messageCount++;
-							
-							callback();
+							if ((!body.ok) && (body.error_code === 403)) {
+								// User blocked the app
+								Users.update({ id: user.id }, { chatDeleted: true }).exec(function(error) {
+
+									if (error) {
+										console.warn('APPALERT: Unable to block user with ID: ' + user.id);
+									}
+									
+									failedRecipients.push(user.id);
+
+									callback();
+								});
+							} else if (!body.ok) {
+								// Something happened, move onto next user
+								console.warn('APPALERT: Unable to send a message to user with ID: ' + user.id);
+								failedRecipients.push(user.id);
+								callback();
+							} else {
+								recipients.push(user.id);
+								callback();
+							}
 						});
 					} else {
 						callback();
@@ -175,9 +192,17 @@ function sendMessages(databaseQuery) {
 			}
 
 			// Log this run
-			console.log('Sent messages to ' + messageCount + ' users.');
+			Runs.create({
+				users: recipients,
+				failed: failedRecipients
+			}).exec(function(error, run) {
 
-			return process.exit();
+				if (error) {
+					console.error(error);
+				}
+
+				return process.exit();
+			});
 		});
 	});
 }
